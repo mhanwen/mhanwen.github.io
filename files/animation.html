@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你有时间吗</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .falling-text {
+            position: absolute;
+            top: -100px;
+            opacity: 0;
+            font-size: 48px;
+            color: white;
+            animation: fall 5s ease-in-out forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(calc(50vh - 24px));
+                opacity: 1;
+            }
+        }
+
+        .final-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            color: white;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out 5s forwards;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #text-1 { font-family: 'Arial', sans-serif; animation-delay: 0s; }
+        #text-2 { font-family: 'Times New Roman', serif; animation-delay: 1s; }
+        #text-3 { font-family: 'Courier New', monospace; animation-delay: 2s; }
+        #text-4 { font-family: 'Georgia', serif; animation-delay: 3s; }
+        #text-5 { font-family: 'Verdana', sans-serif; animation-delay: 4s; }
+    </style>
+</head>
+<body>
+    <div id="text-1" class="falling-text">你</div>
+    <div id="text-2" class="falling-text">有</div>
+    <div id="text-3" class="falling-text">时</div>
+    <div id="text-4" class="falling-text">间</div>
+    <div id="text-5" class="falling-text">吗</div>
+    
+    <div class="final-text" id="finalText">你有时间吗</div>
+    
+    <audio id="audioPlayer" preload="auto">
+        <source src="114.mp4" type="video/mp4">
+    </audio>
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('audioPlayer').play();
+            document.getElementById('finalText').style.display = 'block';
+        }, 5000);
+    </script>
+</body>
+</html>
