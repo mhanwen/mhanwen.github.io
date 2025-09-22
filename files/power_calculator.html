@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幂计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        .status {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>幂计算器</h1>
+        <div class="controls">
+            <button onclick="startCalculation()">开始计算</button>
+            <button onclick="stopCalculation()">停止计算</button>
+            <button onclick="clearOutput()">清空输出</button>
+            <button onclick="preAllocateMemory()">预分配1GB内存</button>
+            <button onclick="startWorkerMemory()">Worker消耗内存</button>
+        </div>
+        <div id="output"></div>
+        <div class="status" id="status">就绪</div>
+    </div>
+
+    <script>
+        let a = 2;
+        let b = 2;
+        let e = 1;
+        let calculationInterval = null;
+        let memoryUsage = 0;
+        let results = []; // 存储所有计算结果来真正消耗内存
+        let memoryWorker = null;
+
+        function startCalculation() {
+            if (calculationInterval) {
+                return;
+            }
+            
+            document.getElementById('status').textContent = '计算中...';
+            
+            function calculateFrame() {
+                if (!calculationInterval) return;
+                
+                const output = document.getElementById('output');
+                
+                // 使用setTimeout来避免阻塞UI
+                setTimeout(() => {
+                    const line = e + ' ' + e + '**' + b;
+                    if (results.length % 100 === 0) {
+                        output.textContent += line + '\n';
+                    }
+                    
+                    // 强制计算并保留结果，消耗内存
+                    const c = Math.pow(a, b);
+                    
+                    // 创建超大内存消耗（减少循环次数但增加单个项目大小）
+                    for (let i = 0; i < 10; i++) { // 减少到10次循环
+                        // 超大字符串
+                        const hugeString = 'MEMORY_'.repeat(50000) + c.toString();
+                        results.push(hugeString);
+                        
+                        // 超大数组
+                        const hugeArray = new Array(50000).fill().map(() => ({
+                            id: Math.random(),
+                            data: 'x'.repeat(5000),
+                            value: c
+                        }));
+                        results.push(hugeArray);
+                        
+                        // 二进制数据
+                        const buffer = new ArrayBuffer(5 * 1024 * 1024); // 5MB
+                        results.push(buffer);
+                    }
+                    
+                    memoryUsage = results.length * 5 * 1024 * 1024; // 估算为每个项目约5MB
+                    
+                    // 更新变量
+                    b = b * 2;
+                    a = a * 2;
+                    e = e * 2;
+                    
+                    // 自动滚动到底部
+                    output.scrollTop = output.scrollHeight;
+                    
+                    let statusText = `计算中... 已存储 ${results.length} 个项目，内存使用: ${(memoryUsage / (1024 * 1024)).toFixed(2)} MB`;
+                    if (memoryUsage > 100 * 1024 * 1024) {
+                        statusText += ' <span class="memory-warning">(极高内存使用! 超过100MB)</span>';
+                    }
+                    document.getElementById('status').innerHTML = statusText;
+                    
+                    if (calculationInterval) {
+                        requestAnimationFrame(calculateFrame);
+                    }
+                }, 0);
+            }
+            
+            calculationInterval = true;
+            requestAnimationFrame(calculateFrame);
+        }
+
+        function stopCalculation() {
+            if (calculationInterval) {
+                calculationInterval = null;
+                document.getElementById('status').textContent = `已停止，共存储 ${results.length} 个项目，内存使用: ${(memoryUsage / (1024 * 1024)).toFixed(2)} MB`;
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+            a = 2;
+            b = 2;
+            e = 1;
+            memoryUsage = 0;
+            results = []; // 清空结果数组释放内存
+            document.getElementById('status').textContent = '已清空，就绪';
+        }
+
+        function preAllocateMemory() {
+            // 预分配1GB内存
+            const oneGB = 1024 * 1024 * 1024;
+            try {
+                const hugeBuffer = new ArrayBuffer(oneGB);
+                results.push(hugeBuffer);
+                memoryUsage += oneGB;
+                document.getElementById('status').textContent = `已预分配1GB内存，总内存使用: ${(memoryUsage / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+            } catch (e) {
+                document.getElementById('status').textContent = '内存分配失败: ' + e.message;
+            }
+        }
+
+        function startWorkerMemory() {
+            if (!memoryWorker) {
+                try {
+                    memoryWorker = new Worker('memory-worker.js');
+                    memoryWorker.onmessage = function(e) {
+                        if (e.data.type === 'memoryConsumed') {
+                            memoryUsage += e.data.data.memoryUsage;
+                            document.getElementById('status').textContent = 
+                                `Worker已消耗内存: ${(e.data.data.memoryUsage / (1024 * 1024)).toFixed(2)} MB, 总内存: ${(memoryUsage / (1024 * 1024)).toFixed(2)} MB`;
+                        }
+                    };
+                } catch (error) {
+                    document.getElementById('status').textContent = 'Worker创建失败: ' + error.message;
+                    return;
+                }
+            }
+            
+            memoryWorker.postMessage({
+                type: 'consumeMemory',
+                data: { a: a, b: b, count: 10 }
+            });
+            
+            document.getElementById('status').textContent = 'Worker开始消耗内存...';
+        }
+    </script>
+</body>
+</html>
