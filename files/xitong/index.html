@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件跳转器</title>
+</head>
+<body>
+    <h1>文件快速跳转</h1>
+    <p>输入文件名（例如：114.xhtml）即可跳转到当前目录下的该文件。</p>
+    <input type="text" id="fileName" placeholder="请输入文件名" style="width: 300px; padding: 8px;">
+    <button onclick="jumpToFile()" style="padding: 8px 16px;">跳转</button>
+
+    <script>
+        function jumpToFile() {
+            const input = document.getElementById('fileName');
+            const fileName = input.value.trim();
+            if (fileName === '') {
+                alert('请输入文件名');
+                return;
+            }
+            // 跳转到当前目录下的指定文件
+            window.location.href = fileName;
+        }
+
+        // 支持回车键触发跳转
+        document.getElementById('fileName').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                jumpToFile();
+            }
+        });
+    </script>
+</body>
+</html>
